@@ -3,11 +3,13 @@
 .hid-lenovo.mod.cmd
 .hid-lenovo.mod.o.cmd
 .hid-lenovo.o.cmd
-Module.symvers
+.Module.symvers*
+Module.symvers*
 built-in.a
 hid-lenovo.ko
 hid-lenovo.mod
 hid-lenovo.mod.c
 hid-lenovo.mod.o
 hid-lenovo.o
-modules.order
+.modules.order*
+modules.order*

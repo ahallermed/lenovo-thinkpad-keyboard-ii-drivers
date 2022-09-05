@@ -1,78 +1,70 @@
-# Thinkpad Bluetooth Keyboard II - Driver patch for Linux 5.4
+# Thinkpad Bluetooth Keyboard II - Driver patch for Linux 5.15
 
-This repo contains my attempts to modify, compile and test
-[a patch made by @ValdikSS](
-https://lore.kernel.org/linux-input/20211017083246.977096-1-iam@valdikss.org.ru/T/
-)
-for the kernel module `hid-lenovo` to solve weird behaviors of the **Thinkpad
-Bluetooth Keyboard II** in Linux kernel 5.4, compared to 5.10+ (the kernel
-version the patch is originally based upon), before migrating to 5.19 (not yet released).
+Issue:
 
-The first version of the external Thinkpad Keyboard (Wired USB) works really
-good on Linux, but the second version (Wireless USB/BT) doesn't work very well
-on OS other than Windows. *Thanks* Lenovo...
+- The middle button always pasted the clipboard, even when used for scrolling
+- FN keys did not work (e.g. F4, F9, F10)
 
-I personally have noticed the following **unbearable annoyances** from day 1
-using this keyboard on Linux:
+Solution:
 
-- No horizontal scrolling
-    - I really use it while coding, designing and drawing.
+- Use the 5.19 linux kernel keyboard files to install the patch yourself.
 
-- Vertically scrolling with middle button + TrackPoint pastes whatever the
-  clipboard is currently holding.
+Information:
 
-    - Scrolling through files of code is the most annoying thing, the keyboard
-      is always pasting things and I find myself undoing those a lot, then
-      falling back to mouse + scrollbar (eww!).
+- Not needed anymore after kernel 5.19 is used on your system. Thank you for doing these updates
 
-- Vertically scrolling triggers a left-click.
-    - This causes me to click on things I don't intend to more often than I can handle.
+**Final steps to apply the (modified) patch in kernel 5.15:**
 
-- The toggle-mic-mute button does not work.
-    - [A while ago I made a script for the wired version of the keyboard that
-      works like a charm](https://gist.github.com/lu0/fd4a22d6869edab2592173f691043195)
-      , but this simply won't work for the wireless version of the keyboard since the
-      keystroke is not recognized neither by the X server nor at ACPI level.
+1. (already done, but you can do that yourself as well)
+Go to <https://github.com/torvalds/linux/tree/v5.19/drivers/hid>
+and copy the content from hid-ids.h and hid-lenovo.c into the files here, to that
+the files from the new kernel are used (a stable release with first occurance of that fix).
 
-There's a few more annoyances, although I can bear with those since I don't use
-these features frequently:
-
-- Buttons to toggle Bluetooth (F10) and Wifi (F8, notification center in
-  *Winbloats*) do not work.
-- Buttons *Tools* (F9), and *Favorites* (F12 ) do not work, but I don't use them
-  at all.
-
-
-My attempts are logged in shape of weird, maybe broken, commits. I won't even
-clear the history at this point. I want to track my progress.
-
-~~Will update this README once I solve most of the unbearable annoyances on kernel
-5.4~~
-
-**Final steps to apply the (modified) patch in kernel 5.4:**
+2. Compile the files and install them to the current kernel
 
 Compile the modified patched module with the also-modified make script:
+
 ```sh
-./make.sh
+make clean
+make
+sudo make modules_install
+```
+
+```sh
+# make.sh doing the installation for all kernels: Not needed in my opinion. Only newest kernel is enough
+# (lead to some errors for older kernels for me)
+#./make.sh
 ```
 
 Backup the unpatched modules
+
 ```sh
-cp /lib/modules/5.4.0-26-generic/kernel/drivers/hid/hid-lenovo.ko hid-lenovo.ko.unpatched
+kernel=`uname -r`
+cp /lib/modules/${kernel}/kernel/drivers/hid/hid-lenovo.ko hid-lenovo.ko.unpatched
+```
+
+Backup the patched modules
+
+```sh
+sudo cp /lib/modules/${kernel}/extra/hid-lenovo.ko hid-lenovo.ko.patched
 ```
 
 Make patched module the default one
+
 ```sh
-sudo cp -f /lib/modules/5.4.0-26-generic/extra/hid-lenovo.ko /lib/modules/5.4.0-26-generic/kernel/drivers/hid/hid-lenovo.ko
+sudo cp -f /lib/modules/${kernel}/extra/hid-lenovo.ko /lib/modules/${kernel}/kernel/drivers/hid/hid-lenovo.ko
 ```
 
 Reload the module
-```
-sudo rmmod hid-lenovo && sudo modprobe hid-lenovo
+
+```sh
+sudo rmmod hid-lenovo
+sudo modprobe hid-lenovo
 ```
 
 Make the module load automatically:
+
 ```sh
 echo -e "\nhid-lenovo" | sudo tee -a /etc/modules-load.d/modules.conf
+cat  /etc/modules-load.d/modules.conf
 ```
-
